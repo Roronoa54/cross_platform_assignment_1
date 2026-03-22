@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
 }
 
 // ─── THEME DEFINITIONS ────────────────────────────────────────────────────────
-//All themes under here
+// All themes under here
 
-//different yet same to const. Don't forget. final is given a value and debugging and can't change where const has a value before debugging
+// different yet same to const. Don't forget. final is given a value at debugging and can't change where const has a value before debugging
 final ThemeData spaceBlueTheme = ThemeData(
   colorScheme: ColorScheme.fromSeed(
     seedColor: const Color(0xFF4FC3F7),
     brightness: Brightness.dark,
   ),
 
-  //Material3 is different to 2. Basically rounder corners for buttons.
+  // Material3 is different to 2. Basically rounder corners for buttons.
   useMaterial3: true,
   scaffoldBackgroundColor: const Color(0xFF0A0E1A),
   cardColor: const Color(0xFF0D1B2A),
@@ -87,7 +90,7 @@ final ThemeData nebulaTheme = ThemeData(
 class Planet {
   final String name;
   final String emoji;
-  final String todo; // placeholder for what we'll add
+  final String todo; // placeholder for what to add
 
   const Planet({
     required this.name,
@@ -119,7 +122,24 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _isDarkTheme = false;
 
-  void _toggleTheme(bool value) {
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme(); // loading tge saved theme when app starts
+  }
+
+  // READ from device
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
+    });
+  }
+
+  
+  Future<void> _toggleTheme(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkTheme', value);
     setState(() {
       _isDarkTheme = value;
     });
@@ -236,7 +256,9 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             // TODO: NASA APOD API call
+
             //Make sure to complete this as API is necessary to achieve higher grade boundaries.
+
             //Also make sure to add local storage of some sort for minimum pass
             Card(
               margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -256,7 +278,7 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Add NASA API key and http package\nto fetch daily space image',
+                      'Add NASA API key to fetch daily space image',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.grey,
                           ),
@@ -343,7 +365,7 @@ class SettingsPage extends StatefulWidget {
     required this.onThemeToggle,
   });
 
-  @override
+  @override // Method Overriding
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
@@ -359,6 +381,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void didUpdateWidget(SettingsPage oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     // Keep local state in sync if parent changes
     if (oldWidget.isDarkTheme != widget.isDarkTheme) {
       _localIsDark = widget.isDarkTheme;
